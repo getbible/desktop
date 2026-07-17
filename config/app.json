@@ -1,4 +1,5 @@
 {
+  "schema": 1,
   "app": {
     "name": "getBible.Life",
     "slug": "getbible-life",
@@ -9,22 +10,12 @@
     "allowed_origins": [
       "https://app.getbible.life"
     ],
-    "summary": "Read, study, and share the Bible in a focused desktop application.",
+    "summary": "Read and study the Bible in a focused desktop application",
     "description": "getBible.Life packages the app.getbible.life web application as a focused desktop application for Linux, macOS, and Windows.",
     "about": "getBible.Life is a focused desktop shell for the app.getbible.life Bible reading and study experience.",
-    "license": "GPL-3.0-or-later"
-  },
-  "support": {
-    "url": "https://app.getbible.life/",
-    "email": "",
-    "label": "Get support",
-    "message": "Visit app.getbible.life for help and support information."
-  },
-  "offline": {
-    "title": "Connect to the internet",
-    "message": "getBible.Life needs an internet connection. The application will reconnect automatically when the website becomes available.",
-    "retry_label": "Try again",
-    "checking_label": "Checking connection…"
+    "user_agent_product": "GetBibleLifeDesktop",
+    "javascript_object": "GetBibleApp",
+    "html_class": "getbible-life-desktop-app"
   },
   "window": {
     "width": 1280,
@@ -33,17 +24,27 @@
     "minimum_height": 640,
     "show_app_menu": false
   },
-  "integration": {
-    "javascript_object": "GetBibleApp",
-    "user_agent_product": "GetBibleLifeDesktop"
+  "offline": {
+    "title": "Connect to the internet",
+    "message": "getBible.Life needs an internet connection. The application will reconnect automatically when the website becomes available.",
+    "retry_label": "Try again",
+    "checking_message": "Checking the connection…",
+    "connected_message": "Connected. Loading getBible.Life…",
+    "failed_message": "Still offline. getBible.Life will retry automatically."
+  },
+  "support": {
+    "label": "Get support",
+    "url": "https://app.getbible.life/",
+    "email": "",
+    "message": "Visit app.getbible.life for help and support information."
   },
   "branding": {
     "icon": "branding/getbible-life.png.base64",
-    "background": "#111111",
-    "foreground": "#f5f5f5",
-    "accent": "#76b7e5"
+    "accent_color": "#76b7e5",
+    "background_color": "#111111"
   },
   "linux": {
+    "generic_name": "Bible Application",
     "categories": [
       "Education",
       "Utility"
@@ -59,7 +60,8 @@
     "name": "getbible-life",
     "base": "core24",
     "grade": "stable",
-    "confinement": "strict"
+    "confinement": "strict",
+    "license": "GPL-3.0-or-later"
   },
   "windows": {
     "identity_name": "live.getbible.app",
@@ -71,6 +73,6 @@
   "macos": {
     "minimum_system_version": "11.0",
     "category": "public.app-category.reference",
-    "copyright": "Copyright © Vast Development Method"
+    "copyright": "Copyright © 2026 Vast Development Method"
   }
 }
