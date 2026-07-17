@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=getBible.Life
+GenericName=Web Application
+Comment=Read and study the Bible in a focused desktop application
+Exec=getbible-life
+Icon=${SNAP}/meta/gui/getbible-life.png
+Terminal=false
+Categories=Education;Utility;
+Keywords=Bible;Scripture;Study;GetBible;
+StartupNotify=true
+StartupWMClass=getbible-life
