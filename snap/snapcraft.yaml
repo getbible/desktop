@@ -1,0 +1,53 @@
+name: getbible-life
+version: '1.0.0'
+summary: Read and study the Bible in a focused desktop application
+description: |
+  getBible.Life packages https://app.getbible.life/ as a focused desktop
+  application. It uses the operating system web engine, preserves normal
+  cookies and local storage, and displays a reconnect page when the service
+  is unavailable.
+website: https://app.getbible.life/
+contact: https://app.getbible.life/
+license: GPL-3.0-or-later
+base: core24
+grade: stable
+confinement: strict
+
+parts:
+  application:
+    plugin: cmake
+    source: .
+    build-packages:
+      - g++
+      - libgtk-3-dev
+      - libwebkit2gtk-4.1-dev
+      - pkg-config
+    stage-packages:
+      - libwebkit2gtk-4.1-0
+    cmake-parameters:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_PREFIX=/usr
+      - -DWEBAPP_USE_GENERATED=ON
+
+apps:
+  getbible-life:
+    command: usr/bin/getbible-life
+    extensions:
+      - gnome
+    plugs:
+      - audio-playback
+      - browser-support
+      - desktop
+      - desktop-legacy
+      - home
+      - network
+      - network-status
+      - opengl
+      - screen-inhibit-control
+      - wayland
+      - x11
+    environment:
+      TMPDIR: $XDG_RUNTIME_DIR
+      XDG_CACHE_HOME: $SNAP_USER_COMMON/.cache
+      XDG_CONFIG_HOME: $SNAP_USER_COMMON/.config
+      XDG_DATA_HOME: $SNAP_USER_COMMON/.local/share
