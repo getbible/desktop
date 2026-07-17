@@ -35,15 +35,28 @@ $ChocDir = Join-Path $RootDir 'subprojects\choc'
 $ChocHeader = Join-Path $ChocDir 'choc\gui\choc_WebView.h'
 
 if (-not (Test-Path $ChocHeader)) {
+    $HasChocGitlink = $false
+
     if (Test-Path (Join-Path $RootDir '.git')) {
+        $StageEntry = & git -C $RootDir ls-files --stage -- 'subprojects/choc'
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Unable to inspect the CHOC gitlink state.'
+        }
+        $HasChocGitlink = [bool]($StageEntry -match '^160000\s')
+    }
+
+    if ($HasChocGitlink) {
         Invoke-Native 'git' @('-C', $RootDir, 'submodule', 'sync', '--', 'subprojects/choc')
         Invoke-Native 'git' @('-C', $RootDir, 'submodule', 'update', '--init', '--recursive', '--', 'subprojects/choc')
     }
 
     if (-not (Test-Path $ChocHeader)) {
         if (Test-Path $ChocDir) { Remove-Item $ChocDir -Recurse -Force }
-        Invoke-Native 'git' @('clone', 'https://github.com/Tracktion/choc.git', $ChocDir)
-        Invoke-Native 'git' @('-C', $ChocDir, 'checkout', '--detach', $ChocRevision)
+        New-Item -ItemType Directory -Path $ChocDir -Force | Out-Null
+        Invoke-Native 'git' @('-C', $ChocDir, 'init')
+        Invoke-Native 'git' @('-C', $ChocDir, 'remote', 'add', 'origin', 'https://github.com/Tracktion/choc.git')
+        Invoke-Native 'git' @('-C', $ChocDir, 'fetch', '--depth', '1', 'origin', $ChocRevision)
+        Invoke-Native 'git' @('-C', $ChocDir, 'checkout', '--detach', 'FETCH_HEAD')
     }
 }
 
