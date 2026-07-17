@@ -42,22 +42,24 @@ env:
 
 jobs:
   validate:
+    name: Validate configuration and scripts
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - run: chmod +x scripts/*.sh
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m pip install --requirement tools/requirements.txt
-      - run: ./scripts/validate.sh
+      - name: Install generator dependencies
+        run: python -m pip install --requirement tools/requirements.txt
+      - name: Validate generated metadata and shell syntax
+        run: bash scripts/validate.sh
 
   linux:
+    name: Build Linux archive
     needs: validate
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - run: chmod +x scripts/*.sh
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -67,7 +69,7 @@ jobs:
           sudo apt-get install --yes build-essential cmake libgtk-3-dev libwebkit2gtk-4.1-dev pkg-config
           python -m pip install --requirement tools/requirements.txt
       - name: Build Linux archive
-        run: ./scripts/package-linux.sh
+        run: bash scripts/package-linux.sh
       - uses: actions/upload-artifact@v4
         with:
           name: linux-package
@@ -75,6 +77,7 @@ jobs:
           if-no-files-found: error
 
   snap:
+    name: Build Linux Snap
     needs: validate
     runs-on: ubuntu-24.04
     steps:
@@ -82,11 +85,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m pip install --requirement tools/requirements.txt
+      - name: Install generator dependencies
+        run: python -m pip install --requirement tools/requirements.txt
       - name: Prepare pinned CHOC dependency
         run: bash scripts/bootstrap.sh
-      - run: python tools/configure_app.py --config config/app.json --output generated
-      - id: snapcraft
+      - name: Generate configured application
+        run: python tools/configure_app.py --config config/app.json --output generated
+      - name: Build Snap
+        id: snapcraft
         uses: snapcore/action-build@v1
       - uses: actions/upload-artifact@v4
         with:
@@ -95,6 +101,7 @@ jobs:
           if-no-files-found: error
 
   windows:
+    name: Build Windows MSIX
     needs: validate
     runs-on: windows-2022
     env:
@@ -104,7 +111,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m pip install --requirement tools/requirements.txt
+      - name: Install generator dependencies
+        run: python -m pip install --requirement tools/requirements.txt
       - name: Import optional signing certificate
         shell: pwsh
         env:
@@ -125,6 +133,7 @@ jobs:
           if-no-files-found: error
 
   macos:
+    name: Build macOS DMG
     needs: validate
     runs-on: macos-14
     env:
@@ -134,11 +143,11 @@ jobs:
       APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
     steps:
       - uses: actions/checkout@v4
-      - run: chmod +x scripts/*.sh
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m pip install --requirement tools/requirements.txt
+      - name: Install generator dependencies
+        run: python -m pip install --requirement tools/requirements.txt
       - name: Import optional Apple signing certificate
         env:
           APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
@@ -160,7 +169,7 @@ jobs:
       - name: Build macOS DMG
         env:
           APPLE_NOTARIZE: ${{ secrets.APPLE_CERTIFICATE_BASE64 != '' && secrets.APPLE_ID != '' && '1' || '0' }}
-        run: ./scripts/package-macos.sh
+        run: bash scripts/package-macos.sh
       - uses: actions/upload-artifact@v4
         with:
           name: macos-package
