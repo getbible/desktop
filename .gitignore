@@ -1,0 +1,30 @@
+# Build output
+/build/
+/build-*/
+/dist/
+/stage/
+/prime/
+/parts/
+*.snap
+*.msix
+*.dmg
+*.zip
+*.p12
+*.pfx
+
+# Dependency checkout created by scripts/bootstrap.sh
+/subprojects/choc/
+
+# Optional local workflow input files
+/.github-runtime/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Editors and operating systems
+.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
