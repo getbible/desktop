@@ -1,0 +1,76 @@
+{
+  "app": {
+    "name": "getBible.Life",
+    "slug": "getbible-life",
+    "id": "live.getbible.app",
+    "version": "1.0.0",
+    "url": "https://app.getbible.life/",
+    "homepage_url": "https://app.getbible.life/",
+    "allowed_origins": [
+      "https://app.getbible.life"
+    ],
+    "summary": "Read, study, and share the Bible in a focused desktop application.",
+    "description": "getBible.Life packages the app.getbible.life web application as a focused desktop application for Linux, macOS, and Windows.",
+    "about": "getBible.Life is a focused desktop shell for the app.getbible.life Bible reading and study experience.",
+    "license": "GPL-3.0-or-later"
+  },
+  "support": {
+    "url": "https://app.getbible.life/",
+    "email": "",
+    "label": "Get support",
+    "message": "Visit app.getbible.life for help and support information."
+  },
+  "offline": {
+    "title": "Connect to the internet",
+    "message": "getBible.Life needs an internet connection. The application will reconnect automatically when the website becomes available.",
+    "retry_label": "Try again",
+    "checking_label": "Checking connection…"
+  },
+  "window": {
+    "width": 1280,
+    "height": 820,
+    "minimum_width": 420,
+    "minimum_height": 640,
+    "show_app_menu": false
+  },
+  "integration": {
+    "javascript_object": "GetBibleApp",
+    "user_agent_product": "GetBibleLifeDesktop"
+  },
+  "branding": {
+    "icon": "branding/getbible-life.png.base64",
+    "background": "#111111",
+    "foreground": "#f5f5f5",
+    "accent": "#76b7e5"
+  },
+  "linux": {
+    "categories": [
+      "Education",
+      "Utility"
+    ],
+    "keywords": [
+      "Bible",
+      "Scripture",
+      "Study",
+      "GetBible"
+    ]
+  },
+  "snap": {
+    "name": "getbible-life",
+    "base": "core24",
+    "grade": "stable",
+    "confinement": "strict"
+  },
+  "windows": {
+    "identity_name": "live.getbible.app",
+    "publisher": "CN=Vast Development Method",
+    "publisher_display_name": "Vast Development Method",
+    "minimum_version": "10.0.17763.0",
+    "architecture": "x64"
+  },
+  "macos": {
+    "minimum_system_version": "11.0",
+    "category": "public.app-category.reference",
+    "copyright": "Copyright © Vast Development Method"
+  }
+}
