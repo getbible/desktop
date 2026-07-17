@@ -2,8 +2,7 @@ name: Build all desktop targets
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -42,6 +41,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - run: chmod +x scripts/*.sh
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -53,6 +53,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - run: chmod +x scripts/*.sh
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -127,6 +128,7 @@ jobs:
       APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
     steps:
       - uses: actions/checkout@v4
+      - run: chmod +x scripts/*.sh
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
