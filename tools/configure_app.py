@@ -20,11 +20,12 @@ def main(argv: list[str] | None = None) -> int:
         if args.github_output:
             with args.github_output.open("a", encoding="utf-8") as stream:
                 outputs = {
-                    "app-name": config["app"]["name"],
-                    "app-slug": config["app"]["slug"],
-                    "app-version": config["app"]["version"],
-                    "snap-name": config["snap"]["name"],
-                    "windows-architecture": config["windows"]["architecture"],
+                    "app_name": config["app"]["name"],
+                    "app_slug": config["app"]["slug"],
+                    "app_version": config["app"]["version"],
+                    "artifact_name": f"{config['app']['slug']}-{config['app']['version']}",
+                    "snap_name": config["snap"]["name"],
+                    "windows_architecture": config["windows"]["architecture"],
                 }
                 for key, value in outputs.items():
                     stream.write(f"{key}={value}\n")
