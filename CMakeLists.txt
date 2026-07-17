@@ -45,13 +45,24 @@ endif()
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/generated/app_config.cmake")
 
+string(
+    REGEX MATCH
+    "^[0-9]+(\\.[0-9]+)?(\\.[0-9]+)?(\\.[0-9]+)?"
+    WEBAPP_CMAKE_VERSION
+    "${WEBAPP_VERSION}"
+)
+
+if(NOT WEBAPP_CMAKE_VERSION)
+    message(FATAL_ERROR "WEBAPP_VERSION must begin with a numeric version: ${WEBAPP_VERSION}")
+endif()
+
 if(APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "${WEBAPP_MACOS_MINIMUM_SYSTEM_VERSION}" CACHE STRING "Minimum macOS version" FORCE)
 endif()
 
 project(
     website_desktop_app
-    VERSION "${WEBAPP_VERSION}"
+    VERSION "${WEBAPP_CMAKE_VERSION}"
     DESCRIPTION "${WEBAPP_DESCRIPTION}"
     HOMEPAGE_URL "${WEBAPP_HOMEPAGE_URL}"
     LANGUAGES CXX
@@ -150,8 +161,8 @@ elseif(APPLE)
             MACOSX_BUNDLE_GUI_IDENTIFIER "${WEBAPP_ID}"
             MACOSX_BUNDLE_INFO_PLIST "${WEBAPP_GENERATED_DIR}/Info.plist"
             MACOSX_BUNDLE_ICON_FILE "icon.icns"
-            MACOSX_BUNDLE_SHORT_VERSION_STRING "${WEBAPP_VERSION}"
-            MACOSX_BUNDLE_BUNDLE_VERSION "${WEBAPP_VERSION}"
+            MACOSX_BUNDLE_SHORT_VERSION_STRING "${WEBAPP_CMAKE_VERSION}"
+            MACOSX_BUNDLE_BUNDLE_VERSION "${WEBAPP_CMAKE_VERSION}"
     )
 endif()
 
