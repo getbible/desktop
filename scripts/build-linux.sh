@@ -6,8 +6,8 @@ BUILD_DIR="${BUILD_DIR:-${ROOT_DIR}/build}"
 BUILD_TYPE="${BUILD_TYPE:-Release}"
 CONFIG_FILE="${WEBAPP_CONFIG_FILE:-${ROOT_DIR}/config/app.json}"
 
-"${ROOT_DIR}/scripts/bootstrap.sh"
-"${ROOT_DIR}/scripts/configure-app.sh" "${CONFIG_FILE}"
+bash "${ROOT_DIR}/scripts/bootstrap.sh"
+bash "${ROOT_DIR}/scripts/configure-app.sh" "${CONFIG_FILE}"
 
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/generated/app.env"
