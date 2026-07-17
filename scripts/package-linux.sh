@@ -12,9 +12,9 @@ DIST_DIR="${DIST_DIR:-${ROOT_DIR}/dist/linux}"
 CONFIG_FILE="${WEBAPP_CONFIG_FILE:-${ROOT_DIR}/config/app.json}"
 
 if [[ "${SKIP_BUILD:-0}" != "1" ]]; then
-    BUILD_DIR="${BUILD_DIR}" WEBAPP_CONFIG_FILE="${CONFIG_FILE}" "${ROOT_DIR}/scripts/build-linux.sh"
+    BUILD_DIR="${BUILD_DIR}" WEBAPP_CONFIG_FILE="${CONFIG_FILE}" bash "${ROOT_DIR}/scripts/build-linux.sh"
 else
-    "${ROOT_DIR}/scripts/configure-app.sh" "${CONFIG_FILE}"
+    bash "${ROOT_DIR}/scripts/configure-app.sh" "${CONFIG_FILE}"
 fi
 
 # shellcheck disable=SC1091
