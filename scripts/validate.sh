@@ -6,7 +6,7 @@ PYTHON_BIN="${PYTHON_BIN:-python3}"
 
 cd "${ROOT_DIR}"
 
-"${ROOT_DIR}/scripts/configure-app.sh" "${WEBAPP_CONFIG_FILE:-${ROOT_DIR}/config/app.json}"
+bash "${ROOT_DIR}/scripts/configure-app.sh" "${WEBAPP_CONFIG_FILE:-${ROOT_DIR}/config/app.json}"
 "${PYTHON_BIN}" -m unittest discover -s "${ROOT_DIR}/tests" -p 'test_*.py' -v
 
 "${PYTHON_BIN}" - <<'PY'
