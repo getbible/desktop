@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/getbible/desktop/blob/main/config/app.schema.json",
+  "title": "Website Desktop Application Configuration",
+  "type": "object",
+  "properties": {
+    "schema": {"const": 1},
+    "app": {
+      "type": "object",
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "slug": {"type": "string", "pattern": "^[a-z][a-z0-9-]*[a-z0-9]$"},
+        "id": {"type": "string", "minLength": 3},
+        "version": {"type": "string", "pattern": "^[0-9]+(?:\\.[0-9]+){0,3}(?:[-+][A-Za-z0-9.-]+)?$"},
+        "url": {"type": "string", "format": "uri", "pattern": "^https://"},
+        "homepage_url": {"type": "string", "format": "uri", "pattern": "^https://"},
+        "allowed_origins": {"type": "array", "items": {"type": "string", "pattern": "^https://"}, "uniqueItems": true},
+        "summary": {"type": "string", "minLength": 1, "maxLength": 79},
+        "description": {"type": "string", "minLength": 1},
+        "about": {"type": "string", "minLength": 1},
+        "user_agent_product": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$"},
+        "javascript_object": {"type": "string", "pattern": "^[A-Za-z_$][A-Za-z0-9_$]*$"},
+        "html_class": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"}
+      },
+      "additionalProperties": false
+    },
+    "window": {
+      "type": "object",
+      "properties": {
+        "width": {"type": "integer", "minimum": 320},
+        "height": {"type": "integer", "minimum": 240},
+        "minimum_width": {"type": "integer", "minimum": 320},
+        "minimum_height": {"type": "integer", "minimum": 240},
+        "show_app_menu": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "offline": {
+      "type": "object",
+      "properties": {
+        "title": {"type": "string"},
+        "message": {"type": "string"},
+        "retry_label": {"type": "string"},
+        "checking_message": {"type": "string"},
+        "connected_message": {"type": "string"},
+        "failed_message": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "support": {
+      "type": "object",
+      "properties": {
+        "label": {"type": "string"},
+        "url": {"type": "string"},
+        "email": {"type": "string"},
+        "message": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "branding": {
+      "type": "object",
+      "properties": {
+        "icon": {"type": "string"},
+        "accent_color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+        "background_color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"}
+      },
+      "additionalProperties": false
+    },
+    "linux": {"type": "object"},
+    "snap": {"type": "object"},
+    "windows": {"type": "object"},
+    "macos": {"type": "object"}
+  },
+  "additionalProperties": false
+}
