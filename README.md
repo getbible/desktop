@@ -1,33 +1,56 @@
 # Website Desktop Application Template
 
-A configurable C++ shell that turns an HTTPS website into a focused Linux, macOS, and Windows desktop application. It uses the operating system's native web engine through [CHOC](https://github.com/Tracktion/choc), preserves cookies and local storage, shows a branded offline page, disables the browser context menu, and prevents top-level navigation outside configured origins.
+A configurable C++ shell that turns an HTTPS website into a focused Linux, macOS, and Windows desktop application. It uses the operating system's native web engine through [CHOC](https://github.com/Tracktion/choc), preserves cookies and local storage, displays a branded offline page, disables the browser context menu, and prevents top-level navigation outside configured origins.
 
-The checked-in fallback profile is:
+## Default GetBible profile
 
-- Name: `getBible.Life`
-- Application URL, homepage, support URL, and allowed origin: `https://app.getbible.life/`
-- Application ID: `live.getbible.app`
-- Executable and Snap name: `getbible-life`
-- Icon: `branding/getbible-life.png`
+Without overrides, the repository builds:
 
-Missing values inherit these defaults.
+```text
+Name:             getBible.Life
+Application URL:  https://app.getbible.life/
+Homepage:         https://app.getbible.life/
+Support URL:      https://app.getbible.life/
+Allowed origin:   https://app.getbible.life
+Application ID:   live.getbible.app
+Executable:       getbible-life
+Snap name:        getbible-life
+```
 
-## What is configurable
+The default floating three-dot menu is disabled so it cannot cover controls owned by the website.
 
-`config/app.json` controls:
+## Features
 
-- Website URL, homepage, allowed origins, application identity, and version
-- Name, summary, description, About text, and support information
-- Offline messages and retry text
-- Window dimensions
-- Optional injected application menu
-- User-agent and JavaScript application markers
-- Linux desktop and Snap metadata
-- Windows MSIX identity, publisher, architecture, and minimum Windows version
-- macOS bundle category, minimum version, and copyright
-- Source icon and branding colours
+- Configurable name, domain, allowed origins, version, descriptions, support information, offline messages, window size, icons, and Store identities.
+- JSON configuration with repository variable and secret overrides.
+- Persistent native WebView cookies, local storage, and login state.
+- Branded embedded offline, About, and Support pages.
+- Top-level navigation restricted to configured HTTPS origins.
+- Right-click, middle-click, auxiliary buttons, and keyboard context menus disabled.
+- JavaScript and user-agent application detection for website-specific layouts.
+- Linux portable archive and Snap packaging.
+- Windows MSIX packaging with optional certificate signing.
+- macOS DMG packaging with optional Developer ID signing and notarization.
+- Automatic builds on every push to `main`.
+- Tag-driven GitHub Releases with all packages and SHA-256 checksums.
+- Optional Snap Store publication after the GitHub Release succeeds.
 
-The generator writes C++ headers, Linux metadata, Snapcraft files, Windows resources and MSIX manifest/assets, macOS `Info.plist` and entitlements, plus PNG/ICO/ICNS icons.
+## Repository layout
+
+```text
+config/app.json                 Default application configuration
+config/app.schema.json          Configuration schema
+branding/                       Default and custom source icons
+src/                            C++ desktop shell
+scripts/                        Local build and packaging commands
+tools/                          Configuration and metadata generator
+tests/                          Generator tests
+docs/                           Integration and distribution guides
+.github/workflows/build.yml     Main-branch multi-platform builds
+.github/workflows/release.yml   Tag-driven release and Snap publication
+```
+
+Generated metadata is written under `generated/` and should not be edited manually.
 
 ## Linux quick start
 
@@ -37,121 +60,92 @@ sudo apt install --yes \
     build-essential cmake git libgtk-3-dev libwebkit2gtk-4.1-dev \
     pkg-config python3 python3-pil
 
-./scripts/bootstrap.sh
+chmod +x scripts/*.sh
 ./scripts/build-linux.sh
 ./build/getbible-life
 ```
 
-## macOS build
-
-Run on macOS with Xcode Command Line Tools, CMake, Git, Python 3, and Pillow installed:
+The bootstrap script fetches the pinned upstream CHOC revision. Register it as a normal Git submodule in a local clone when desired:
 
 ```bash
-./scripts/build-macos.sh
-open ./build-macos/getbible-life.app
+./scripts/register-submodule.sh
+git commit -m 'Register upstream CHOC submodule'
 ```
 
-Create a DMG:
+## macOS
+
+Run on macOS with Xcode Command Line Tools, CMake, Git, Python 3, and Pillow:
 
 ```bash
+chmod +x scripts/*.sh
+./scripts/build-macos.sh
+open ./build-macos/getbible-life.app
 ./scripts/package-macos.sh
 ```
 
-Signing and notarization instructions are in [docs/MACOS_DISTRIBUTION.md](docs/MACOS_DISTRIBUTION.md).
+See [macOS distribution](docs/MACOS_DISTRIBUTION.md).
 
-## Windows build
+## Windows
 
-Run from PowerShell on Windows with Visual Studio 2022 C++ tools, CMake, Git, Python 3, Pillow, and the Windows SDK installed:
+Run from PowerShell on Windows with Visual Studio 2022 C++ tools, CMake, Git, Python 3, Pillow, and the Windows SDK:
 
 ```powershell
+python -m pip install --requirement tools/requirements.txt
 ./scripts/build-windows.ps1
-./build-windows/Release/getbible-life.exe
-```
-
-Create an MSIX:
-
-```powershell
 ./scripts/package-windows.ps1
 ```
 
-Signing and Microsoft Store instructions are in [docs/WINDOWS_STORE.md](docs/WINDOWS_STORE.md).
+See [Windows distribution](docs/WINDOWS_STORE.md).
 
 ## Configure another website
 
+Copy the default configuration and supply another icon:
+
 ```bash
 mkdir -p config/sites branding/sites
-cp config/app.json config/sites/my-site.json
-cp branding/getbible-life.png branding/sites/my-site.png
+cp config/app.json config/sites/example.json
+cp /path/to/example.png branding/sites/example.png
 ```
 
-Set at least:
+Minimal profile:
 
 ```json
 {
   "app": {
-    "name": "My Website",
-    "slug": "my-website",
-    "id": "com.example.mywebsite",
+    "name": "Example Portal",
+    "slug": "example-portal",
+    "id": "com.example.portal",
     "version": "1.0.0",
-    "url": "https://app.example.com/",
-    "homepage_url": "https://app.example.com/",
-    "allowed_origins": ["https://app.example.com"]
+    "url": "https://portal.example.com/",
+    "homepage_url": "https://portal.example.com/",
+    "allowed_origins": ["https://portal.example.com"]
   },
   "window": {
     "show_app_menu": false
   },
   "branding": {
-    "icon": "branding/sites/my-site.png"
+    "icon": "branding/sites/example.png"
   },
   "snap": {
-    "name": "my-website"
+    "name": "example-portal"
   },
   "windows": {
-    "identity_name": "com.example.mywebsite",
+    "identity_name": "com.example.portal",
     "publisher": "CN=Example Publisher",
     "publisher_display_name": "Example Publisher"
   }
 }
 ```
 
-Build that profile on Linux:
+Build it:
 
 ```bash
-WEBAPP_CONFIG_FILE=config/sites/my-site.json ./scripts/build-linux.sh
+WEBAPP_CONFIG_FILE=config/sites/example.json ./scripts/build-linux.sh
 ```
 
-The macOS and Windows scripts accept the same `WEBAPP_CONFIG_FILE` environment variable.
+See [configuration](docs/CONFIGURATION.md).
 
-## Application menu
-
-The injected three-dot application menu is now **disabled by default** because a floating control can overlap controls owned by the website. About and Support pages remain available internally at:
-
-```text
-webapp://app/about
-webapp://app/support
-```
-
-The website can open them through the injected identity object:
-
-```javascript
-document.querySelector('#about-app')?.addEventListener('click', () => {
-    window.location.assign(window.WebAppDesktop.aboutURL);
-});
-
-document.querySelector('#support-app')?.addEventListener('click', () => {
-    window.location.assign(window.WebAppDesktop.supportURL);
-});
-```
-
-Set `window.show_app_menu` to `true` only for websites that have reserved clear space for the floating menu. CHOC does not currently expose one portable native title-bar/menu API across Linux, macOS, and Windows, so the template does not pretend the injected menu is native.
-
-## Runtime behaviour
-
-Only origins listed in `app.allowed_origins` may load as top-level pages. External attempts are cancelled and return to `app.url`. Right-click, middle-click, auxiliary mouse buttons, the keyboard context-menu key, and `Shift+F10` do nothing. Normal left-click interaction remains available.
-
-The shell starts on an embedded offline page, probes the configured URL, and loads the site when connectivity returns. Native cookies, local storage, and login state persist across restarts.
-
-## Website detection
+## Application detection
 
 Every page receives:
 
@@ -159,51 +153,87 @@ Every page receives:
 window.WebAppDesktop
 ```
 
-and the configured alias, which is `window.GetBibleApp` in the default profile. The object includes `name`, `slug`, `version`, `platform`, `aboutURL`, and `supportURL`.
+The default profile also exposes:
 
-Linux also appends `GetBibleLifeDesktop/<version>` to WebKitGTK's normal user agent. These markers are presentation hints, not authentication credentials.
-
-See [docs/APP_INTEGRATION.md](docs/APP_INTEGRATION.md).
-
-## Distribution channels
-
-The Snap Store distributes Linux Snaps only. It does not install applications on Windows or macOS.
-
-- Linux: Snap Store — [docs/SNAP_STORE.md](docs/SNAP_STORE.md)
-- Windows: signed MSIX and Microsoft Store — [docs/WINDOWS_STORE.md](docs/WINDOWS_STORE.md)
-- macOS: signed/notarized DMG or Mac App Store — [docs/MACOS_DISTRIBUTION.md](docs/MACOS_DISTRIBUTION.md)
-
-The repository includes environment-selected manual workflows for all three package types, plus a tag-driven production workflow:
-
-```text
-Build configured Snap
-Build configured Windows MSIX
-Build configured macOS DMG
-Build and publish release
+```javascript
+window.GetBibleApp
 ```
 
-The production workflow always creates Linux, Snap, Windows, and macOS packages and attaches them to a GitHub Release. Repository secrets enable optional Windows signing, Apple signing/notarization, and automatic Snap Store publication. A fork can target another website by setting `WEBAPP_CONFIG_JSON`, `WEBAPP_ICON_BASE64`, and `WEBAPP_*` repository values without editing the C++ source.
+Example:
 
-See [docs/AUTOMATED_RELEASES.md](docs/AUTOMATED_RELEASES.md) for the complete release and secret setup.
+```javascript
+if (window.WebAppDesktop?.isApp) {
+    document.querySelector('.browser-only')?.remove();
+}
+```
 
-## Automated stable release
+The document root receives `webapp-desktop-app` and a configurable application-specific class. Linux also appends `GetBibleLifeDesktop/<version>` to WebKitGTK's normal user agent. These markers control presentation only; they are not authentication credentials.
 
-Push a version tag after the normal checks pass:
+See [website integration](docs/APP_INTEGRATION.md).
+
+## About and Support
+
+The embedded overlay menu is disabled by default. A website can add controls where they fit its own layout:
+
+```javascript
+document.querySelector('#desktop-about')?.addEventListener('click', () => {
+    window.location.assign(window.WebAppDesktop.aboutURL);
+});
+
+document.querySelector('#desktop-support')?.addEventListener('click', () => {
+    window.location.assign(window.WebAppDesktop.supportURL);
+});
+```
+
+The internal destinations are `webapp://app/about` and `webapp://app/support`.
+
+## Automatic builds
+
+Every push to `main` runs **Build all desktop targets** and produces downloadable workflow artifacts for:
+
+- Linux `.tar.gz`;
+- Linux `.snap`;
+- Windows `.msix`;
+- macOS `.dmg`.
+
+Repository configuration and signing values are optional. The default GetBible profile is used when none are supplied.
+
+## Automatic releases
+
+After the main-branch checks pass, push a semantic version tag:
 
 ```bash
+git checkout main
+git pull --ff-only
 git tag -s v1.0.0 -m 'getBible.Life 1.0.0'
 git push origin v1.0.0
 ```
 
-The workflow creates downloadable packages for every target and then attempts to publish the Snap to `stable`. If Snap credentials are missing, only the Snap Store publication job fails; the GitHub Release and all generated packages remain available.
+**Build and publish release** then:
+
+1. builds all four packages;
+2. creates `SHA256SUMS`;
+3. creates the GitHub Release and uploads all packages;
+4. attempts Snap Store publication only afterward.
+
+When `SNAPCRAFT_STORE_CREDENTIALS` is absent, the final Store job fails clearly, but the GitHub Release and downloadable packages remain available.
+
+See [automated releases](docs/AUTOMATED_RELEASES.md) and [Snap Store distribution](docs/SNAP_STORE.md).
 
 ## Validation
 
 ```bash
+chmod +x scripts/*.sh
 ./scripts/validate.sh
 ```
 
-GitHub Actions also performs Linux, Windows, and macOS compilation.
+## Distribution channels
+
+- Linux: GitHub Release archive or Snap Store.
+- Windows: signed MSIX and Microsoft Store.
+- macOS: signed/notarized DMG or a separately prepared Mac App Store submission.
+
+The Snap Store distributes Linux packages only.
 
 ## License
 
