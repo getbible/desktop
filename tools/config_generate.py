@@ -46,7 +46,7 @@ def generate(root: Path, out: Path, config: dict[str, Any]) -> None:
     identity = {"isApp":True,"name":app["name"],"client":"desktop","version":app["version"],"url":app["url"],"aboutURL":"webapp://app/about","supportURL":"webapp://app/support"}
     constants = {
         "name":app["name"],"slug":app["slug"],"version":app["version"],"appURL":app["url"],"aboutText":app["about"],
-        "aboutURL":"webapp://app/about","shellURL":"webapp://app/offline","offlineURL":"webapp://app/offline",
+        "aboutURL":"webapp://app/about","shellURL":"webapp://app","offlineURL":"webapp://app/offline",
         "supportPageURL":"webapp://app/support","supportLabel":support["label"],"supportURL":support["url"],"supportEmail":support["email"],
         "supportMessage":support["message"],"offlineTitle":offline["title"],"offlineMessage":offline["message"],"offlineRetryLabel":offline["retry_label"],
         "offlineCheckingMessage":offline["checking_message"],"offlineConnectedMessage":offline["connected_message"],"offlineFailedMessage":offline["failed_message"],
