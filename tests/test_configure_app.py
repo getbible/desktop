@@ -12,10 +12,29 @@ ROOT = Path(__file__).resolve().parents[1]
 import sys
 sys.path.insert(0, str(ROOT / "tools"))
 
+import config_generate  # noqa: E402
 import configure_app  # noqa: E402
 
 
 class ConfigureAppTests(unittest.TestCase):
+    def test_missing_configuration_file_uses_getbible_defaults(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            config_path = Path(directory) / "missing.json"
+            with patch.dict(os.environ, {}, clear=True):
+                config = configure_app.load_configuration(config_path)
+
+        self.assertEqual("getBible.Life", config["app"]["name"])
+        self.assertEqual("getbible-life", config["app"]["slug"])
+        self.assertEqual("live.getbible.app", config["app"]["id"])
+        self.assertEqual("1.0.0", config["app"]["version"])
+        self.assertEqual("https://app.getbible.life/", config["app"]["url"])
+        self.assertEqual("https://app.getbible.life/", config["app"]["homepage_url"])
+        self.assertEqual(["https://app.getbible.life"], config["app"]["allowed_origins"])
+        self.assertFalse(config["window"]["show_app_menu"])
+        self.assertEqual("getbible-life", config["snap"]["name"])
+        self.assertEqual("x64", config["windows"]["architecture"])
+        self.assertEqual("11.0", config["macos"]["minimum_system_version"])
+
     def test_missing_values_use_getbible_defaults(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             config_path = Path(directory) / "partial.json"
@@ -32,15 +51,52 @@ class ConfigureAppTests(unittest.TestCase):
         self.assertEqual("11.0", config["macos"]["minimum_system_version"])
         self.assertEqual("2.1.0", config["app"]["version"])
 
+    def test_empty_environment_values_do_not_override_file_or_defaults(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            config_path = Path(directory) / "partial.json"
+            config_path.write_text(json.dumps({"app": {"version": "2.2.0"}}), encoding="utf-8")
+            environment = {
+                "WEBAPP_CONFIG_JSON": "",
+                "WEBAPP_NAME": "",
+                "WEBAPP_VERSION": "",
+                "WEBAPP_URL": "",
+                "WEBAPP_HOMEPAGE_URL": "",
+                "WEBAPP_ALLOWED_ORIGINS": "",
+                "WEBAPP_SNAP_NAME": "",
+            }
+            with patch.dict(os.environ, environment, clear=True):
+                config = configure_app.load_configuration(config_path)
+
+        self.assertEqual("getBible.Life", config["app"]["name"])
+        self.assertEqual("2.2.0", config["app"]["version"])
+        self.assertEqual("https://app.getbible.life/", config["app"]["url"])
+        self.assertEqual("https://app.getbible.life/", config["app"]["homepage_url"])
+        self.assertEqual(["https://app.getbible.life"], config["app"]["allowed_origins"])
+        self.assertEqual("getbible-life", config["snap"]["name"])
+
     def test_environment_values_override_file_and_defaults(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             config_path = Path(directory) / "app.json"
-            config_path.write_text("{}", encoding="utf-8")
+            config_path.write_text(
+                json.dumps({
+                    "app": {
+                        "name": "File Portal",
+                        "slug": "file-portal",
+                        "id": "com.example.FilePortal",
+                        "url": "https://file.example.com/",
+                        "homepage_url": "https://file.example.com/",
+                        "allowed_origins": ["https://file.example.com"],
+                    },
+                    "snap": {"name": "file-portal"},
+                }),
+                encoding="utf-8",
+            )
             environment = {
                 "WEBAPP_NAME": "Example Portal",
                 "WEBAPP_SLUG": "example-portal",
                 "WEBAPP_ID": "com.example.Portal",
                 "WEBAPP_URL": "https://portal.example.com/",
+                "WEBAPP_HOMEPAGE_URL": "https://portal.example.com/",
                 "WEBAPP_ALLOWED_ORIGINS": "https://portal.example.com,https://login.example.com",
                 "WEBAPP_SNAP_NAME": "example-portal",
             }
@@ -48,10 +104,16 @@ class ConfigureAppTests(unittest.TestCase):
                 config = configure_app.load_configuration(config_path)
 
         self.assertEqual("Example Portal", config["app"]["name"])
+        self.assertEqual("example-portal", config["app"]["slug"])
+        self.assertEqual("com.example.Portal", config["app"]["id"])
+        self.assertEqual("1.0.0", config["app"]["version"])
+        self.assertEqual("https://portal.example.com/", config["app"]["url"])
+        self.assertEqual("https://portal.example.com/", config["app"]["homepage_url"])
         self.assertEqual(
             ["https://portal.example.com", "https://login.example.com"],
             config["app"]["allowed_origins"],
         )
+        self.assertEqual("example-portal", config["snap"]["name"])
 
     def test_secret_json_is_deep_merged(self) -> None:
         secret = json.dumps({
@@ -116,6 +178,26 @@ class ConfigureAppTests(unittest.TestCase):
         self.assertEqual(
             ["https://reader.example.org", "https://auth.example.org"],
             config["app"]["allowed_origins"],
+        )
+
+    def test_generated_internal_routes_use_scheme_base(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "generated"
+            with patch.dict(os.environ, {}, clear=True):
+                config = configure_app.load_configuration(root / "missing.json")
+                with patch.object(config_generate, "generate_icons"), patch("shutil.copy2"):
+                    config_generate.generate(root, output, config)
+
+            header = (output / "app_config.hpp").read_text(encoding="utf-8")
+
+        self.assertIn(
+            'inline constexpr std::string_view shellURL = "webapp://app";',
+            header,
+        )
+        self.assertIn(
+            'inline constexpr std::string_view offlineURL = "webapp://app/offline";',
+            header,
         )
 
 
