@@ -97,24 +97,44 @@ std::string createSupportPage()
     return createPage(supportLabel, body.str(), actions);
 }
 
+std::string normalizeEmbeddedResourcePath(const std::string& path)
+{
+    std::string normalizedPath = path;
+
+    if (const auto suffixPosition = normalizedPath.find_first_of("?#");
+        suffixPosition != std::string::npos)
+    {
+        normalizedPath.erase(suffixPosition);
+    }
+
+    while (normalizedPath.size() > 1U && normalizedPath.back() == '/')
+    {
+        normalizedPath.pop_back();
+    }
+
+    return normalizedPath.empty() ? "/" : normalizedPath;
+}
+
 std::optional<choc::ui::WebView::Options::Resource> fetchEmbeddedResource(const std::string& path)
 {
-    if (path.empty() || path == "/" || path == "/offline")
+    const auto normalizedPath = normalizeEmbeddedResourcePath(path);
+
+    if (normalizedPath == "/" || normalizedPath == "/offline")
     {
         return choc::ui::WebView::Options::Resource(createOfflinePage(), "text/html; charset=utf-8");
     }
 
-    if (path == "/about")
+    if (normalizedPath == "/about")
     {
         return choc::ui::WebView::Options::Resource(createAboutPage(), "text/html; charset=utf-8");
     }
 
-    if (path == "/support")
+    if (normalizedPath == "/support")
     {
         return choc::ui::WebView::Options::Resource(createSupportPage(), "text/html; charset=utf-8");
     }
 
-    if (path == "/icon.png")
+    if (normalizedPath == "/icon.png")
     {
         return choc::ui::WebView::Options::Resource(
             std::string_view(
@@ -123,5 +143,6 @@ std::optional<choc::ui::WebView::Options::Resource> fetchEmbeddedResource(const 
             "image/png");
     }
 
+    std::cerr << name << ": unhandled embedded resource path: " << path << '\n';
     return std::nullopt;
 }
