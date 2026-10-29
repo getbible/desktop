@@ -63,6 +63,7 @@ if (-not (Test-Path $ChocHeader)) {
 if (-not (Test-Path $ChocHeader)) { throw "CHOC could not be prepared at $ChocDir" }
 
 Invoke-Native 'python' @('-c', 'import PIL')
+$PythonExecutable = (Invoke-Native 'python' @('-c', 'import sys; print(sys.executable)')).Trim()
 Invoke-Native 'python' @(
     (Join-Path $RootDir 'tools\configure_app.py'),
     '--root', $RootDir,
@@ -78,7 +79,7 @@ if ($Config.windows.architecture -ne $Architecture) {
 }
 
 $CMakeArchitecture = if ($Architecture -eq 'arm64') { 'ARM64' } else { 'x64' }
-Invoke-Native 'cmake' @('-S', $RootDir, '-B', $BuildDir, '-A', $CMakeArchitecture, '-DWEBAPP_USE_GENERATED=ON')
+Invoke-Native 'cmake' @('-S', $RootDir, '-B', $BuildDir, '-A', $CMakeArchitecture, '-DWEBAPP_USE_GENERATED=ON', "-DWEBAPP_PYTHON_EXECUTABLE=$PythonExecutable")
 Invoke-Native 'cmake' @('--build', $BuildDir, '--config', $BuildType, '--parallel')
 
 $Executable = Join-Path $BuildDir "$BuildType\$($Config.app.slug).exe"

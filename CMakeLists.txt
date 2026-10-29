@@ -5,16 +5,16 @@ option(WEBAPP_USE_GENERATED "Use the already-generated application configuration
 option(WEBAPP_ENABLE_DEBUG_TOOLS "Enable WebView developer tools by default" OFF)
 set(CHOC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/subprojects/choc/choc" CACHE PATH "Path to the CHOC headers")
 
-if(NOT WEBAPP_USE_GENERATED)
-    find_program(
-        WEBAPP_PYTHON_EXECUTABLE
-        NAMES python3 python
-        HINTS
-            "${CMAKE_CURRENT_SOURCE_DIR}/.venv/bin"
-            "${CMAKE_CURRENT_SOURCE_DIR}/.venv/Scripts"
-        REQUIRED
-    )
+find_program(
+    WEBAPP_PYTHON_EXECUTABLE
+    NAMES python3 python
+    HINTS
+        "${CMAKE_CURRENT_SOURCE_DIR}/.venv/bin"
+        "${CMAKE_CURRENT_SOURCE_DIR}/.venv/Scripts"
+    REQUIRED
+)
 
+if(NOT WEBAPP_USE_GENERATED)
     execute_process(
         COMMAND
             "${WEBAPP_PYTHON_EXECUTABLE}"
@@ -76,6 +76,24 @@ if(NOT EXISTS "${CHOC_ROOT}/gui/choc_WebView.h")
     )
 endif()
 
+set(WEBAPP_CHOC_ROOT "${CMAKE_CURRENT_BINARY_DIR}/prepared-choc")
+execute_process(
+    COMMAND
+        "${WEBAPP_PYTHON_EXECUTABLE}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tools/prepare_choc.py"
+        --source "${CHOC_ROOT}"
+        --output "${WEBAPP_CHOC_ROOT}"
+    RESULT_VARIABLE WEBAPP_CHOC_RESULT
+    OUTPUT_VARIABLE WEBAPP_CHOC_OUTPUT
+    ERROR_VARIABLE WEBAPP_CHOC_ERROR
+)
+if(NOT WEBAPP_CHOC_RESULT EQUAL 0)
+    message(FATAL_ERROR
+        "CHOC storage preparation failed.\n"
+        "${WEBAPP_CHOC_OUTPUT}${WEBAPP_CHOC_ERROR}"
+    )
+endif()
+
 set(WEBAPP_SOURCES src/main.cpp)
 set(WEBAPP_GENERATED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/generated")
 
@@ -103,11 +121,11 @@ set(WEBAPP_TARGET "${WEBAPP_EXECUTABLE}")
 target_compile_features("${WEBAPP_TARGET}" PRIVATE cxx_std_17)
 target_include_directories(
     "${WEBAPP_TARGET}"
-    SYSTEM PRIVATE "${CHOC_ROOT}"
+    SYSTEM PRIVATE "${WEBAPP_CHOC_ROOT}"
 )
 target_include_directories(
     "${WEBAPP_TARGET}"
-    PRIVATE "${WEBAPP_GENERATED_DIR}"
+    PRIVATE "${WEBAPP_GENERATED_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
 
 if(WEBAPP_ENABLE_DEBUG_TOOLS)
@@ -141,6 +159,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
             PkgConfig::GTK3
             PkgConfig::WEBKIT2GTK
     )
+elseif(WIN32)
+    target_link_libraries("${WEBAPP_TARGET}" PRIVATE shell32 ole32 uuid)
 elseif(APPLE)
     target_compile_options("${WEBAPP_TARGET}" PRIVATE -fblocks)
     target_link_libraries(

@@ -51,6 +51,12 @@ html:not(.webapp-desktop-app) .desktop-only {
 }
 ```
 
+## Website sessions and storage
+
+With `app.persistent: true` (the default), the shell reuses the application's website data across launches. Websites can use their normal cookies, local storage, and IndexedDB without additional desktop-specific JavaScript. Separate applications should use distinct `app.id` values; changing the ID selects a different profile.
+
+Persistent storage preserves the web engine's normal authentication semantics. Cookies without persistent expiry, expired server sessions, explicit logout, and a password vault's lock timeout remain controlled by the website. Use `app.persistent: false` for a fresh profile on each launch. See [configuration](CONFIGURATION.md#persistent-website-data) for platform storage locations.
+
 ## Server-side detection
 
 On Linux, the native WebKit user agent retains its normal value and appends:

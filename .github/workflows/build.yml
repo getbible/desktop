@@ -3,6 +3,8 @@ name: Build all desktop targets
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -20,6 +22,7 @@ env:
   WEBAPP_ID: ${{ vars.WEBAPP_ID }}
   WEBAPP_VERSION: ${{ vars.WEBAPP_VERSION }}
   WEBAPP_URL: ${{ vars.WEBAPP_URL }}
+  WEBAPP_PERSISTENT: ${{ vars.WEBAPP_PERSISTENT }}
   WEBAPP_HOMEPAGE_URL: ${{ vars.WEBAPP_HOMEPAGE_URL }}
   WEBAPP_SUMMARY: ${{ vars.WEBAPP_SUMMARY }}
   WEBAPP_DESCRIPTION: ${{ vars.WEBAPP_DESCRIPTION }}
@@ -66,10 +69,12 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install --yes build-essential cmake libgtk-3-dev libwebkit2gtk-4.1-dev pkg-config
+          sudo apt-get install --yes build-essential cmake libgtk-3-dev libwebkit2gtk-4.1-dev pkg-config xvfb xauth dbus-x11
           python -m pip install --requirement tools/requirements.txt
       - name: Build Linux archive
         run: bash scripts/package-linux.sh
+      - name: Verify native session persistence and profile isolation
+        run: dbus-run-session -- xvfb-run -a python tests/run_storage_smoke.py
       - uses: actions/upload-artifact@v4
         with:
           name: linux-package
