@@ -16,7 +16,7 @@ def main(argv: list[str] | None = None) -> int:
     out = args.output if args.output.is_absolute() else root / args.output
     try:
         config = load_configuration(config_path)
-        generate(root, out, config)
+        generate(root, out, config, config_dir=config_path.parent)
         if args.github_output:
             with args.github_output.open("a", encoding="utf-8") as stream:
                 outputs = {

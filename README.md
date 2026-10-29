@@ -18,12 +18,15 @@ Snap name:        getbible-life
 ```
 
 The default floating three-dot menu is disabled so it cannot cover controls owned by the website.
+`app.persistent` defaults to `true`, retaining website storage and persistent
+cookies between launches according to the website's own login and expiry rules.
 
 ## Features
 
 - Configurable name, domain, allowed origins, version, descriptions, support information, offline messages, window size, icons, and Store identities.
 - JSON configuration with repository variable and secret overrides.
 - Persistent native WebView cookies, local storage, and login state.
+- One-command Ubuntu/GNOME installation with `build-linux.sh --install`.
 - Branded embedded offline, About, and Support pages.
 - Top-level navigation restricted to configured HTTPS origins.
 - Right-click, middle-click, auxiliary buttons, and keyboard context menus disabled.
@@ -63,6 +66,21 @@ sudo apt install --yes \
 chmod +x scripts/*.sh
 ./scripts/build-linux.sh
 ./build/getbible-life
+```
+
+To build and install for the current desktop user:
+
+```bash
+bash scripts/build-linux.sh --install
+```
+
+This installs the binary in `~/.local/bin/images/` and registers its launcher
+and icons in the standard XDG desktop directories. It does not require root
+after the build dependencies are installed. To remove the installed application
+while retaining its saved sessions and website data:
+
+```bash
+bash scripts/uninstall-linux.sh --local
 ```
 
 The bootstrap script fetches the pinned upstream CHOC revision. Register it as a normal Git submodule in a local clone when desired:
@@ -117,6 +135,7 @@ Minimal profile:
     "id": "com.example.portal",
     "version": "1.0.0",
     "url": "https://portal.example.com/",
+    "persistent": true,
     "homepage_url": "https://portal.example.com/",
     "allowed_origins": ["https://portal.example.com"]
   },
@@ -144,6 +163,20 @@ WEBAPP_CONFIG_FILE=config/sites/example.json ./scripts/build-linux.sh
 ```
 
 See [configuration](docs/CONFIGURATION.md).
+
+Profiles can also live entirely outside the repository. For example, a profile
+at `~/my-apps/portal/config/app.json` can use `"icon": "../branding/icon.png"`:
+
+```bash
+bash scripts/build-linux.sh --config "$HOME/my-apps/portal/config/app.json" --install
+bash scripts/uninstall-linux.sh --local --config "$HOME/my-apps/portal/config/app.json"
+```
+
+Relative icon paths are checked against the configuration file's directory
+first, then the repository root for compatibility with existing profiles.
+`WEBAPP_CONFIG_FILE` and existing environment overrides continue to work.
+Each website should have a distinct `app.id` and `app.slug` so its storage,
+installed binary and desktop launcher remain independent.
 
 ## Application detection
 

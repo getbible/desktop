@@ -11,6 +11,7 @@
         "name": {"type": "string", "minLength": 1},
         "slug": {"type": "string", "pattern": "^[a-z][a-z0-9-]*[a-z0-9]$"},
         "id": {"type": "string", "minLength": 3},
+        "persistent": {"type": "boolean", "default": true},
         "version": {"type": "string", "pattern": "^[0-9]+(?:\\.[0-9]+){0,3}(?:[-+][A-Za-z0-9.-]+)?$"},
         "url": {"type": "string", "format": "uri", "pattern": "^https://"},
         "homepage_url": {"type": "string", "format": "uri", "pattern": "^https://"},

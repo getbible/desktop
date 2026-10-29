@@ -23,6 +23,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "schema": 1,
     "app": {
         "name": "getBible.Life", "slug": "getbible-life", "id": "live.getbible.app",
+        "persistent": True,
         "version": "1.0.0", "url": "https://app.getbible.life/",
         "homepage_url": "https://app.getbible.life/",
         "summary": "Read and study the Bible in a focused desktop application",
@@ -117,6 +118,7 @@ def origin(value: str, field: str) -> str:
 def normalize(config: dict[str, Any]) -> dict[str, Any]:
     if config.get("schema") != 1: raise ConfigurationError("Only configuration schema 1 is supported")
     app = config["app"]
+    if not isinstance(app.get("persistent"), bool): raise ConfigurationError("app.persistent must be boolean")
     for key in ("name", "slug", "id", "version", "summary", "description", "about", "user_agent_product", "javascript_object", "html_class"):
         if not isinstance(app.get(key), str) or not app[key].strip(): raise ConfigurationError(f"app.{key} must be a non-empty string")
         app[key] = app[key].strip()
@@ -169,6 +171,7 @@ def load_configuration(config_path: Path) -> dict[str, Any]:
     if os.environ.get("WEBAPP_LINUX_CATEGORIES", "") != "": config["linux"]["categories"] = parse_list(os.environ["WEBAPP_LINUX_CATEGORIES"])
     if os.environ.get("WEBAPP_LINUX_KEYWORDS", "") != "": config["linux"]["keywords"] = parse_list(os.environ["WEBAPP_LINUX_KEYWORDS"])
     if os.environ.get("WEBAPP_SHOW_APP_MENU", "") != "": config["window"]["show_app_menu"] = parse_bool(os.environ["WEBAPP_SHOW_APP_MENU"])
+    if os.environ.get("WEBAPP_PERSISTENT", "") != "": config["app"]["persistent"] = parse_bool(os.environ["WEBAPP_PERSISTENT"])
     return normalize(config)
 
 

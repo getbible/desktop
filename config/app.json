@@ -4,6 +4,7 @@
     "name": "getBible.Life",
     "slug": "getbible-life",
     "id": "live.getbible.app",
+    "persistent": true,
     "version": "1.0.0",
     "url": "https://app.getbible.life/",
     "homepage_url": "https://app.getbible.life/",
