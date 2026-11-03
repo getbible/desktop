@@ -19,6 +19,8 @@
 #include <string>
 #include <string_view>
 
+#include "recovery_toolbar.hpp"
+
 #if defined(_WIN32)
 #include <windows.h>
 #endif

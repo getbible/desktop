@@ -57,6 +57,10 @@ With `app.persistent: true` (the default), the shell reuses the application's we
 
 Persistent storage preserves the web engine's normal authentication semantics. Cookies without persistent expiry, expired server sessions, explicit logout, and a password vault's lock timeout remain controlled by the website. Use `app.persistent: false` for a fresh profile on each launch. See [configuration](CONFIGURATION.md#persistent-website-data) for platform storage locations.
 
+The native toolbar provides **Refresh** (reload without cached HTTP resources, retaining login data) and **Reset** (confirmed removal of the application's cookies, website storage, and cache). Recovery controls are outside the website DOM and remain usable if page scripts fail. Reset waits for native data removal before reopening the website; websites should continue to manage their own session expiry and token renewal.
+
+The shell leaves an already-open document in place when the network disconnects. A website's own heartbeat, reconnection handling, and unsaved state can continue when connectivity returns. It does not automatically retry failed saves or extend server-side authentication lifetimes.
+
 ## Server-side detection
 
 On Linux, the native WebKit user agent retains its normal value and appends:
@@ -98,7 +102,7 @@ The built-in floating menu is disabled in the default profile to avoid covering 
 
 ## Navigation restrictions
 
-Top-level pages may load only from `app.allowed_origins` or the internal `webapp://app/` pages. Attempts to open unrelated websites are cancelled and return to the configured application URL.
+Top-level pages may load only from `app.allowed_origins` or the internal `webapp://app/` pages. Attempts to open unrelated websites are cancelled while the current page stays open.
 
 Subresources required by the allowed website, such as images, APIs, fonts, or authentication resources, are not subjected to the top-level origin restriction. Configure the website's own Content Security Policy and CORS rules normally.
 

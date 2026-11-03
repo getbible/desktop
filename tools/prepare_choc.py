@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Prepare a project-owned CHOC header overlay without changing its checkout.
 
-The pinned CHOC WebView has no storage options. This adapter inserts native
-storage hooks before each platform creates its browser and checks every anchor
+The pinned CHOC WebView has no storage or recovery options. This adapter inserts
+native hooks before each platform creates its browser and checks every anchor
 so an incompatible dependency update fails explicitly during configuration.
 """
 from __future__ import annotations
@@ -17,6 +17,68 @@ def replace_once(source: str, old: str, new: str, label: str) -> str:
     if source.count(old) != 1:
         raise ValueError(f"Unsupported CHOC WebView: {label} anchor changed")
     return source.replace(old, new, 1)
+
+
+def add_recovery_support(header: str) -> str:
+    """Expose native recovery without exposing browser-profile paths to pages."""
+    header = replace_once(header,
+                          '#include "webview_storage.hpp"',
+                          '#include "webview_storage.hpp"\n#include "webview_recovery.hpp"',
+                          "recovery include")
+    declaration = '    bool navigate (const std::string& url);'
+    header = replace_once(header, declaration, declaration + '''
+
+    /// Reloads the current website; embedded/error pages return to the app URL.
+    /// ignoreCache preserves cookies and website storage while fetching fresh resources.
+    bool reload (bool ignoreCache = false);
+
+    /// Unloads the page and asynchronously clears this app's browsing data.
+    /// Call on the UI thread. Completion runs there and is suppressed after destruction.
+    /// On Windows, website storage is cleared for every configured allowed origin.
+    void clearBrowsingData (std::function<void(bool)> completion);''',
+                          "recovery API")
+    definition = 'inline bool WebView::navigate (const std::string& url)               { return pimpl != nullptr && pimpl->navigate (url); }'
+    header = replace_once(header, definition, definition + '''
+inline bool WebView::reload (bool ignoreCache)                       { return pimpl != nullptr && pimpl->reload (ignoreCache); }
+inline void WebView::clearBrowsingData (std::function<void(bool)> completion)
+{
+    if (pimpl != nullptr)
+        pimpl->clearBrowsingData (std::move (completion));
+    else if (completion)
+        completion (false);
+}''', "recovery API definitions")
+
+    # Scope the repeated native class anchors to their platform sections.
+    linux, apple_and_windows = header.split('#elif CHOC_APPLE', 1)
+    apple, windows = apple_and_windows.split('#elif CHOC_WINDOWS', 1)
+    marker = '    std::shared_ptr<DeletionChecker> deletionChecker { std::make_shared<DeletionChecker>() };'
+    linux = replace_once(linux, marker, marker + '\n\n#include "webview_recovery_linux.inc"', "Linux recovery methods")
+    apple = replace_once(apple, marker, marker + '\n\n#include "webview_recovery_apple.inc"', "macOS recovery methods")
+    windows = replace_once(windows, marker, marker + '\n\n#include "webview_recovery_windows.inc"', "Windows recovery methods")
+    linux = replace_once(linux,
+                         '        deletionChecker->deleted = true;',
+                         '        deletionChecker->deleted = true;\n        disconnectRecoveryNavigation();',
+                         "Linux recovery shutdown")
+    windows = replace_once(windows,
+                           '        deletionChecker->deleted = true;',
+                           '        deletionChecker->deleted = true;\n        disconnectRecoveryNavigation();',
+                           "Windows recovery shutdown")
+    delegate_marker = '            class_addMethod (delegateClass, sel_registerName ("webView:stopURLSchemeTask:"), (IMP) (+[](id, SEL, id, id) {}), "v@:@@");'
+    apple = replace_once(apple, delegate_marker, '''            class_addMethod (delegateClass, sel_registerName ("webView:didFinishNavigation:"),
+                             (IMP) (+[](id self, SEL, id, id)
+                             {
+                                 if (auto p = getPimpl (self))
+                                     p->finishRecoveryNavigation();
+                             }), "v@:@@");
+
+''' + delegate_marker, "macOS recovery navigation")
+    error_marker = '''        if (objc::call<int> (error, "code") == NSURLErrorCancelled)
+            return;'''
+    apple = replace_once(apple, error_marker, error_marker + '''
+
+        if (browsingDataResetInProgress && recoveryWaitingForBlank)
+            finishRecovery (false);''', "macOS recovery failure")
+    return linux + '#elif CHOC_APPLE' + apple + '#elif CHOC_WINDOWS' + windows
 
 
 def prepare(source_root: Path, output_root: Path) -> None:
@@ -90,6 +152,8 @@ def prepare(source_root: Path, output_root: Path) -> None:
     if end < 0 or 'return path + currentExeName;' not in header[start:end]:
         raise ValueError("Unsupported CHOC WebView: Windows profile method body changed")
     # Keep the original persistent AppData/executable-name implementation intact.
+
+    header = add_recovery_support(header)
 
     # Only write output after every platform's hooks have been validated.
     output_root.mkdir(parents=True, exist_ok=True)
