@@ -75,6 +75,10 @@ jobs:
         run: bash scripts/package-linux.sh
       - name: Verify native session persistence and profile isolation
         run: dbus-run-session -- xvfb-run -a python tests/run_storage_smoke.py
+      - name: Verify native refresh, reset, and navigation recovery
+        run: |
+          dbus-run-session -- xvfb-run -a python tests/run_recovery_smoke.py
+          dbus-run-session -- xvfb-run -a python tests/run_navigation_smoke.py
       - uses: actions/upload-artifact@v4
         with:
           name: linux-package

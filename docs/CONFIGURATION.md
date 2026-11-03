@@ -77,6 +77,15 @@ The original GetBible Linux storage location and the existing Windows profile lo
 
 Persistence respects website authentication rules: cookie expiry, server-side logout, session-only cookies, and password-vault locking still apply. Select a website's **Remember me** option when provided. This setting does not turn an online website into an offline application.
 
+Every application includes native **Refresh** and **Reset** buttons above the website. They remain available when a website is offline or its JavaScript fails, and do not depend on `window.show_app_menu`.
+
+- **Refresh** reloads the current website page without using the HTTP resource cache, while keeping cookies and website storage. From an internal shell page, it opens the configured application URL. Ctrl+R or F5 also refreshes; macOS supports Command+R.
+- **Reset** asks for confirmation, stops the current page, and clears the application's cookies, website storage, and cache. After clearing completes, it opens the configured application URL. This signs the user out and removes locally stored website data; it does not delete files or account data on the server. Cancelling leaves the page and saved data intact.
+
+Reset uses native website-data removal. Isolated Linux profiles and macOS remove their profile's website data. The original GetBible Linux profile retains its legacy storage location, so Reset removes matching website-domain records rather than clearing unrelated websites in that store. WebKit groups sibling subdomains in those records, so this legacy reset can also clear stored data from other subdomains of the same website domain. Windows clears the application's profile cookies and HTTP cache, and website storage for its currently configured `app.allowed_origins`; data from origins removed from an older configuration is outside that storage reset.
+
+A temporary network outage no longer replaces an already-open website with the shell's reconnect page. The website retains its document state and handles reconnection normally. The initial reconnect page remains available when starting offline.
+
 ## Window and embedded menu
 
 ```json
