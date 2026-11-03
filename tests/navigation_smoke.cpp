@@ -177,8 +177,8 @@ int main()
         return G_SOURCE_REMOVE;
     }, &test);
     gtk_main();
-    if (!test.passed) g_source_remove(timer);
-    if (test.phase != -1 || test.passed) g_source_remove(watchdog);
+    if (g_main_context_find_source_by_id(nullptr, timer) != nullptr) g_source_remove(timer);
+    if (g_main_context_find_source_by_id(nullptr, watchdog) != nullptr) g_source_remove(watchdog);
     gtk_widget_destroy(window);
     if (!test.passed) return 1;
     std::cout << "Native external-link/frame confinement, allowed navigation, and offline document preservation passed.\n";

@@ -76,10 +76,7 @@ void configureLinuxNavigationPolicy(choc::ui::WebView& webView)
 
     gtk_widget_add_events(nativeView, GDK_BUTTON_PRESS_MASK);
 
-    (void)g_signal_connect(
-        nativeView,
-        "decide-policy",
-        G_CALLBACK(+[](WebKitWebView*, WebKitPolicyDecision* decision,
+    const auto onPolicyDecision = +[](WebKitWebView*, WebKitPolicyDecision* decision,
                        WebKitPolicyDecisionType decisionType, gpointer userData) -> gboolean {
             WebKitURIRequest* request = nullptr;
             const bool newWindow = decisionType == WEBKIT_POLICY_DECISION_TYPE_NEW_WINDOW_ACTION;
@@ -126,8 +123,8 @@ void configureLinuxNavigationPolicy(choc::ui::WebView& webView)
                 applicationWebView->navigate(std::string(uri));
             }
             return TRUE;
-        }),
-        &webView);
+        };
+    (void)g_signal_connect(nativeView, "decide-policy", G_CALLBACK(onPolicyDecision), &webView);
 
     (void)g_signal_connect(
         nativeView,
