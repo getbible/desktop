@@ -44,7 +44,10 @@ public:
                 static_cast<RecoverySmoke*>(data)->loaded(view);
         }), this);
         g_signal_connect(nativeView, "load-failed", G_CALLBACK(+[](WebKitWebView*, WebKitLoadEvent,
-            const char*, GError* error, gpointer data) -> gboolean {
+            const char* uri, GError* error, gpointer data) -> gboolean {
+            // The recovery API owns failures of its intermediate blank page.
+            if (g_strcmp0(uri, "about:blank") == 0)
+                return FALSE;
             static_cast<RecoverySmoke*>(data)->fail(error != nullptr ? error->message : "Page failed to load");
             return TRUE;
         }), this);

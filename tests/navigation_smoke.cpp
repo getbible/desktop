@@ -123,6 +123,7 @@ struct NavigationTest
 
 int main()
 {
+    choc::messageloop::initialise();
     NavigationTest test;
     choc::ui::WebView::Options options;
     options.customSchemeURI = "webapp://app";

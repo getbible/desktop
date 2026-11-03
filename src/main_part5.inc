@@ -150,6 +150,7 @@ void configureLinuxNavigationPolicy(choc::ui::WebView& webView)
 int runApplication()
 {
     choc::ui::setWindowsDPIAwareness();
+    choc::messageloop::initialise();
 
     choc::ui::WebView::Options options;
     options.customSchemeURI = std::string(shellURL);
