@@ -55,9 +55,6 @@ inline void WebView::clearBrowsingData (std::function<void(bool)> completion)
     linux = replace_once(linux, marker, marker + '\n\n#include "webview_recovery_linux.inc"', "Linux recovery methods")
     apple = replace_once(apple, marker, marker + '\n\n#include "webview_recovery_apple.inc"', "macOS recovery methods")
     windows = replace_once(windows, marker, marker + '\n\n#include "webview_recovery_windows.inc"', "Windows recovery methods")
-    windows = replace_once(windows, 'extern "C"\n{\n\nstruct EventRegistrationToken { __int64 value; };',
-                           '#include <eventtoken.h>\n\nextern "C"\n{',
-                           "use the Windows SDK event token shared with WRL")
     windows = replace_once(windows, '#endif // __webview2_h__',
                            '#endif // __webview2_h__\n\n#include "webview_navigation_windows.hpp"',
                            "Windows navigation policy interfaces")
@@ -131,7 +128,10 @@ def prepare(source_root: Path, output_root: Path) -> None:
                           "Windows profile selection")
     header = replace_once(header,
                           '                        createCoreWebView2EnvironmentWithOptions (nullptr, userDataFolder.c_str(), nullptr, eventHandler);\n                        return true;',
-                          '                        const auto result = createCoreWebView2EnvironmentWithOptions (nullptr, userDataFolder.c_str(), nullptr, eventHandler);\n'
+                          '                        COMPtr<IUnknown> environmentOptions;\n'
+                          '                        if (FAILED(webapp::navigation::createWindowsEnvironmentOptions(environmentOptions.getAddress())))\n'
+                          '                            return false;\n'
+                          '                        const auto result = createCoreWebView2EnvironmentWithOptions (nullptr, userDataFolder.c_str(), environmentOptions.object, eventHandler);\n'
                           '                        if (FAILED (result))\n                            return false;\n'
                           '                        storageProfile.browserStarted();\n                        return true;',
                           "Windows environment")

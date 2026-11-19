@@ -98,13 +98,24 @@ set(WEBAPP_SOURCES src/main.cpp)
 set(WEBAPP_GENERATED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/generated")
 
 if(WIN32)
+    # Only the isolated Windows adapter needs the SDK headers. CHOC supplies
+    # the loader already shipped with the desktop executable.
+    include(FetchContent)
+    FetchContent_Declare(webview2_sdk
+        URL "https://api.nuget.org/v3-flatcontainer/microsoft.web.webview2/1.0.4314.35/microsoft.web.webview2.1.0.4314.35.nupkg"
+        URL_HASH SHA256=90778deb1b77e36292828b4b5833c9255c27533f40e0ddd55891ae718944edc4
+        DOWNLOAD_NAME webview2-sdk.zip
+    )
+    FetchContent_MakeAvailable(webview2_sdk)
     file(TO_CMAKE_PATH "${WEBAPP_GENERATED_DIR}/assets/icon.ico" WEBAPP_WINDOWS_ICON)
     configure_file(
         "${WEBAPP_GENERATED_DIR}/app.rc.in"
         "${CMAKE_CURRENT_BINARY_DIR}/app.rc"
         @ONLY
     )
-    list(APPEND WEBAPP_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/app.rc")
+    list(APPEND WEBAPP_SOURCES src/webview_navigation_windows.cpp "${CMAKE_CURRENT_BINARY_DIR}/app.rc")
+    set_source_files_properties(src/webview_navigation_windows.cpp PROPERTIES
+        INCLUDE_DIRECTORIES "${webview2_sdk_SOURCE_DIR}/build/native/include")
     add_executable("${WEBAPP_EXECUTABLE}" WIN32 ${WEBAPP_SOURCES})
 elseif(APPLE)
     set_source_files_properties(

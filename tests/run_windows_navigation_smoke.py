@@ -77,6 +77,18 @@ def exercise(page: Page, fixture: RedirectFixture) -> None:
     except Error as error:
         raise AssertionError(f"Native startup did not reach {home}; current URL is {page.url}") from error
     assert page.url == home
+    # Follow the public shell URLs a hosted website receives, including a
+    # relative resource and the links that take the user back to the website.
+    page.evaluate("location.assign(window.WebAppDesktop.aboutURL)")
+    page.get_by_role("link", name="Open application").wait_for()
+    assert page.url == "webapp://app/about"
+    page.wait_for_function("document.images[0]?.complete && document.images[0].naturalWidth > 0")
+    page.get_by_role("link", name="Support", exact=True).click()
+    page.get_by_role("link", name="Back to application").wait_for()
+    assert page.url == "webapp://app/support"
+    page.get_by_role("link", name="Back to application").click()
+    page.locator("#unsaved").wait_for()
+    assert page.url == home
     page.locator("#unsaved").fill("unfinished note")
     # A reload, a replacement document or a return home destroys this handle.
     original = page.evaluate_handle("document")
