@@ -55,6 +55,20 @@ inline void WebView::clearBrowsingData (std::function<void(bool)> completion)
     linux = replace_once(linux, marker, marker + '\n\n#include "webview_recovery_linux.inc"', "Linux recovery methods")
     apple = replace_once(apple, marker, marker + '\n\n#include "webview_recovery_apple.inc"', "macOS recovery methods")
     windows = replace_once(windows, marker, marker + '\n\n#include "webview_recovery_windows.inc"', "Windows recovery methods")
+    windows = replace_once(windows, 'extern "C"\n{\n\nstruct EventRegistrationToken { __int64 value; };',
+                           '#include <eventtoken.h>\n\nextern "C"\n{',
+                           "use the Windows SDK event token shared with WRL")
+    windows = replace_once(windows, '#endif // __webview2_h__',
+                           '#endif // __webview2_h__\n\n#include "webview_navigation_windows.hpp"',
+                           "Windows navigation policy interfaces")
+    windows = replace_once(windows, '        coreWebViewController = controller;', '''        if (!webapp::navigation::installWindowsNavigationPolicy(view))
+        {
+            std::fputs("Unable to install the WebView2 navigation policy.\\n", stderr);
+            controller->Close();
+            return;
+        }
+
+        coreWebViewController = controller;''', "Windows navigation policy before first load")
     linux = replace_once(linux,
                          '        deletionChecker->deleted = true;',
                          '        deletionChecker->deleted = true;\n        disconnectRecoveryNavigation();',
@@ -64,7 +78,8 @@ inline void WebView::clearBrowsingData (std::function<void(bool)> completion)
                            '        deletionChecker->deleted = true;\n        disconnectRecoveryNavigation();',
                            "Windows recovery shutdown")
     delegate_marker = '            class_addMethod (delegateClass, sel_registerName ("webView:stopURLSchemeTask:"), (IMP) (+[](id, SEL, id, id) {}), "v@:@@");'
-    apple = replace_once(apple, delegate_marker, '''            class_addMethod (delegateClass, sel_registerName ("webView:didFinishNavigation:"),
+    apple = replace_once(apple, delegate_marker, '''            registerNavigationPolicy (delegateClass);
+            class_addMethod (delegateClass, sel_registerName ("webView:didFinishNavigation:"),
                              (IMP) (+[](id self, SEL, id, id)
                              {
                                  if (auto p = getPimpl (self))
@@ -75,6 +90,9 @@ inline void WebView::clearBrowsingData (std::function<void(bool)> completion)
     error_marker = '''        if (objc::call<int> (error, "code") == NSURLErrorCancelled)
             return;'''
     apple = replace_once(apple, error_marker, error_marker + '''
+
+        if (wasInterruptedByNavigationPolicy (error))
+            return;
 
         if (browsingDataResetInProgress && recoveryWaitingForBlank)
             finishRecovery (false);''', "macOS recovery failure")

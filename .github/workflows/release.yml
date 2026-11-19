@@ -182,7 +182,7 @@ jobs:
 
   macos:
     needs: prepare
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       WEBAPP_VERSION: ${{ needs.prepare.outputs.version }}
       APPLE_ID: ${{ secrets.APPLE_ID }}

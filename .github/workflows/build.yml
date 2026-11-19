@@ -135,6 +135,10 @@ jobs:
       - name: Build Windows MSIX
         shell: pwsh
         run: ./scripts/package-windows.ps1
+      - name: Verify WebView2 preserves the form after a blocked redirect
+        run: |
+          python -m pip install playwright
+          python tests/run_windows_navigation_smoke.py
       - uses: actions/upload-artifact@v4
         with:
           name: windows-package
@@ -144,7 +148,7 @@ jobs:
   macos:
     name: Build macOS DMG
     needs: validate
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -179,6 +183,8 @@ jobs:
         env:
           APPLE_NOTARIZE: ${{ secrets.APPLE_CERTIFICATE_BASE64 != '' && secrets.APPLE_ID != '' && '1' || '0' }}
         run: bash scripts/package-macos.sh
+      - name: Verify WKWebView preserves the form after a blocked redirect
+        run: python tests/run_macos_navigation_smoke.py
       - uses: actions/upload-artifact@v4
         with:
           name: macos-package

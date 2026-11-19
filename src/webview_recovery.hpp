@@ -1,5 +1,6 @@
 #pragma once
 
+#include "webview_navigation.hpp"
 #include <string_view>
 #include <cstdint>
 #include <utility>
