@@ -68,13 +68,17 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: |
-          sudo apt-get update
+          bash .github/scripts/configure-ubuntu-mirror.sh
           sudo apt-get install --yes build-essential cmake libgtk-3-dev libwebkit2gtk-4.1-dev pkg-config xvfb xauth dbus-x11
           python -m pip install --requirement tools/requirements.txt
       - name: Build Linux archive
         run: bash scripts/package-linux.sh
       - name: Verify native session persistence and profile isolation
         run: dbus-run-session -- xvfb-run -a python tests/run_storage_smoke.py
+      - name: Verify native refresh, reset, and navigation recovery
+        run: |
+          dbus-run-session -- xvfb-run -a python tests/run_recovery_smoke.py
+          dbus-run-session -- xvfb-run -a python tests/run_navigation_smoke.py
       - uses: actions/upload-artifact@v4
         with:
           name: linux-package
@@ -98,7 +102,7 @@ jobs:
         run: python tools/configure_app.py --config config/app.json --output generated
       - name: Build Snap
         id: snapcraft
-        uses: snapcore/action-build@v1
+        uses: ./.github/actions/build-snap
       - uses: actions/upload-artifact@v4
         with:
           name: snap-package
@@ -131,6 +135,10 @@ jobs:
       - name: Build Windows MSIX
         shell: pwsh
         run: ./scripts/package-windows.ps1
+      - name: Verify WebView2 preserves the form after a blocked redirect
+        run: |
+          python -m pip install playwright
+          python tests/run_windows_navigation_smoke.py
       - uses: actions/upload-artifact@v4
         with:
           name: windows-package
@@ -140,7 +148,7 @@ jobs:
   macos:
     name: Build macOS DMG
     needs: validate
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -175,6 +183,8 @@ jobs:
         env:
           APPLE_NOTARIZE: ${{ secrets.APPLE_CERTIFICATE_BASE64 != '' && secrets.APPLE_ID != '' && '1' || '0' }}
         run: bash scripts/package-macos.sh
+      - name: Verify WKWebView preserves the form after a blocked redirect
+        run: python tests/run_macos_navigation_smoke.py
       - uses: actions/upload-artifact@v4
         with:
           name: macos-package

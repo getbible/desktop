@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+- Added native Refresh and confirmed Reset controls above every website, with cache-bypassing refresh and asynchronous website-data removal.
+- Preserved active pages during temporary network loss and blocked external navigation without returning the whole application home.
 - Added `app.persistent` to retain website data and persistent cookies across launches, with independent application profiles.
 - Added `build-linux.sh --config FILE --install` and local uninstallation with GNOME launcher and icon registration.
 - Resolved external-profile icons relative to their configuration file while preserving repository-relative paths.

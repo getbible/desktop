@@ -76,10 +76,7 @@ void configureLinuxNavigationPolicy(choc::ui::WebView& webView)
 
     gtk_widget_add_events(nativeView, GDK_BUTTON_PRESS_MASK);
 
-    (void)g_signal_connect(
-        nativeView,
-        "decide-policy",
-        G_CALLBACK(+[](WebKitWebView*, WebKitPolicyDecision* decision,
+    const auto onPolicyDecision = +[](WebKitWebView*, WebKitPolicyDecision* decision,
                        WebKitPolicyDecisionType decisionType, gpointer userData) -> gboolean {
             WebKitURIRequest* request = nullptr;
             const bool newWindow = decisionType == WEBKIT_POLICY_DECISION_TYPE_NEW_WINDOW_ACTION;
@@ -94,6 +91,16 @@ void configureLinuxNavigationPolicy(choc::ui::WebView& webView)
             else if (decisionType == WEBKIT_POLICY_DECISION_TYPE_RESPONSE)
             {
                 auto* responseDecision = WEBKIT_RESPONSE_POLICY_DECISION(decision);
+                // Constrain page destinations, not the website's images,
+                // scripts, stylesheets, or other resource responses. Frame
+                // navigations are checked separately above before their load.
+               #if WEBKIT_CHECK_VERSION(2, 40, 0)
+                if (!webkit_response_policy_decision_is_main_frame_main_resource(responseDecision))
+                    return FALSE;
+               #else
+                // Older WebKit cannot identify main-frame responses. Keep its
+                // existing stricter filtering, while still blocking in place.
+               #endif
                 request = webkit_response_policy_decision_get_request(responseDecision);
             }
             else
@@ -108,14 +115,16 @@ void configureLinuxNavigationPolicy(choc::ui::WebView& webView)
 
             webkit_policy_decision_ignore(decision);
             auto* applicationWebView = static_cast<choc::ui::WebView*>(userData);
-            if (applicationWebView != nullptr)
+            // Ignore blocked destinations in place. Redirecting the complete
+            // view here would discard the active document even when the
+            // rejected navigation originated from a child frame.
+            if (allowed && newWindow && applicationWebView != nullptr && uri != nullptr)
             {
-                applicationWebView->navigate(
-                    allowed && uri != nullptr ? std::string(uri) : std::string(appURL));
+                applicationWebView->navigate(std::string(uri));
             }
             return TRUE;
-        }),
-        &webView);
+        };
+    (void)g_signal_connect(nativeView, "decide-policy", G_CALLBACK(onPolicyDecision), &webView);
 
     (void)g_signal_connect(
         nativeView,
@@ -138,6 +147,7 @@ void configureLinuxNavigationPolicy(choc::ui::WebView& webView)
 int runApplication()
 {
     choc::ui::setWindowsDPIAwareness();
+    choc::messageloop::initialise();
 
     choc::ui::WebView::Options options;
     options.customSchemeURI = std::string(shellURL);
@@ -180,9 +190,16 @@ int runApplication()
         webapp::config::windowWidth,
         webapp::config::windowHeight);
     window.setWindowTitle(std::string(name));
-    window.setContent(webView.getViewHandle());
+    webapp::ui::RecoveryToolbar recoveryToolbar(webView, window, std::string(appURL), std::string(name));
+    if (recoveryToolbar.getViewHandle() == nullptr)
+    {
+        std::cerr << name << " could not initialise the window controls." << std::endl;
+        return EXIT_FAILURE;
+    }
+    window.setContent(recoveryToolbar.getViewHandle());
     window.windowClosed = []() { choc::messageloop::stop(); };
     window.setVisible(true);
+    recoveryToolbar.show();
     window.toFront();
 
     choc::messageloop::run();

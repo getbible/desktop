@@ -26,6 +26,7 @@ cookies between launches according to the website's own login and expiry rules.
 - Configurable name, domain, allowed origins, version, descriptions, support information, offline messages, window size, icons, and Store identities.
 - JSON configuration with repository variable and secret overrides.
 - Persistent native WebView cookies, local storage, and login state.
+- Native Refresh and confirmed Reset buttons above the website, including cache-bypassing reload without losing valid login data.
 - One-command Ubuntu/GNOME installation with `build-linux.sh --install`.
 - Branded embedded offline, About, and Support pages.
 - Top-level navigation restricted to configured HTTPS origins.
@@ -37,6 +38,15 @@ cookies between launches according to the website's own login and expiry rules.
 - Automatic builds on every push to `main`.
 - Tag-driven GitHub Releases with all packages and SHA-256 checksums.
 - Optional Snap Store publication after the GitHub Release succeeds.
+
+## Refresh and reset
+
+Every application includes two buttons above the website:
+
+- **Refresh** reloads the current website page without cached HTTP resources and keeps cookies and website storage. It also opens the configured website from the shell's offline, About, or Support pages.
+- **Reset** asks for confirmation before clearing the application's cookies, website storage, and cache. It signs the user out, then reopens the configured website after removal completes. It does not delete the user's account or files stored on the server.
+
+These native controls remain available when the website's JavaScript fails. Ctrl+R/F5 and Command+R on macOS also refresh the page. Temporary connection loss preserves an already-open page so its own reconnection logic and unsaved state can continue. Session renewal and expiry remain controlled by the website.
 
 ## Repository layout
 

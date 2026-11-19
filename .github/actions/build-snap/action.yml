@@ -1,0 +1,42 @@
+name: Build configured Snap
+description: Pack the generated Snap recipe on a compatible Ubuntu build host.
+outputs:
+  snap:
+    description: Path to the built Snap package
+    value: ${{ steps.host.outputs.snap || steps.managed.outputs.snap }}
+runs:
+  using: composite
+  steps:
+    - id: base
+      shell: bash
+      run: |
+        source /etc/os-release
+        jq -r --arg host "$ID-$VERSION_ID" \
+          '($host == "ubuntu-24.04" and .snap.base == "core24") | "matches_host=\(.)"' \
+          generated/config.resolved.json >> "$GITHUB_OUTPUT"
+
+    - name: Pack core24 on the disposable Ubuntu 24.04 runner
+      id: host
+      if: steps.base.outputs.matches_host == 'true'
+      shell: bash
+      env:
+        SNAPCRAFT_BUILD_INFO: '1'
+        SNAPCRAFT_IMAGE_INFO: '{"build_url":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
+      run: |
+        bash .github/scripts/configure-ubuntu-mirror.sh
+        sudo snap install snapcraft --classic
+        sudo --preserve-env=SNAPCRAFT_BUILD_INFO,SNAPCRAFT_IMAGE_INFO \
+          /snap/bin/snapcraft pack --destructive-mode
+
+        shopt -s nullglob
+        snaps=(*.snap)
+        if (( ${#snaps[@]} != 1 )); then
+          echo "Expected a single .snap package, found ${#snaps[@]}" >&2
+          exit 1
+        fi
+        printf 'snap=%s/%s\n' "$PWD" "${snaps[0]}" >> "$GITHUB_OUTPUT"
+
+    - name: Pack in a managed environment for the configured base
+      id: managed
+      if: steps.base.outputs.matches_host == 'false'
+      uses: snapcore/action-build@v1

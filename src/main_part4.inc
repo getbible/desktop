@@ -5,7 +5,6 @@ std::string createNavigationPolicyScript()
         window.__webappDesktopPolicyInitialised = true;
 
         const homeURL = __HOME_URL__;
-        const offlineURL = __OFFLINE_URL__;
         const allowedOrigins = new Set(__ALLOWED_ORIGINS__);
 
         const stopEvent = event => {
@@ -32,9 +31,9 @@ std::string createNavigationPolicyScript()
 
         const navigateInApplication = value => {
             const destination = resolveURL(value);
-            window.location.assign(destination && isAllowedURL(destination.href)
-                ? destination.href
-                : homeURL);
+            if (!destination || !isAllowedURL(destination.href)) return false;
+            window.location.assign(destination.href);
+            return true;
         };
 
         if (!isAllowedURL(window.location.href)) {
@@ -42,9 +41,9 @@ std::string createNavigationPolicyScript()
             return;
         }
 
-        window.addEventListener("offline", () => {
-            if (window.location.protocol !== "webapp:") window.location.replace(offlineURL);
-        });
+        // Keep the current document alive during network changes. The website
+        // owns its reconnect/session heartbeat, and the native toolbar provides
+        // recovery without discarding unsaved work on a transient offline event.
 
         document.addEventListener("contextmenu", stopEvent, true);
         document.addEventListener("auxclick", stopEvent, true);
@@ -73,7 +72,6 @@ std::string createNavigationPolicyScript()
 
             if (!destination || !isAllowedURL(destination.href)) {
                 stopEvent(event);
-                window.location.replace(homeURL);
                 return;
             }
 
@@ -87,12 +85,10 @@ std::string createNavigationPolicyScript()
             const form = event.target instanceof HTMLFormElement ? event.target : null;
             if (!form || isAllowedURL(form.action)) return;
             stopEvent(event);
-            window.location.replace(homeURL);
         }, true);
 
         const controlledWindowOpen = value => {
-            navigateInApplication(value || homeURL);
-            return window;
+            return navigateInApplication(value || homeURL) ? window : null;
         };
 
         try {
@@ -108,7 +104,6 @@ std::string createNavigationPolicyScript()
     })();)JS";
 
     replaceAll(script, "__HOME_URL__", jsonString(appURL));
-    replaceAll(script, "__OFFLINE_URL__", jsonString(offlineURL));
     replaceAll(script, "__ALLOWED_ORIGINS__", allowedOriginsJSON);
     return script;
 }

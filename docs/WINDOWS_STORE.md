@@ -2,6 +2,10 @@
 
 Windows packages must be built on Windows with Visual Studio 2022 C++ tools, CMake, Git, Python 3, Pillow, and the Windows 10/11 SDK installed.
 
+On the first Windows configure, CMake downloads the pinned Microsoft WebView2 SDK headers from NuGet and verifies the package checksum. For an offline build, pass `-DFETCHCONTENT_SOURCE_DIR_WEBVIEW2_SDK=<unpacked-package-directory>` to CMake.
+
+Client machines need WebView2 Runtime 110.0.1587.40 or later. The app uses its custom scheme support to open `webapp://app/` at startup and serve the offline, About, and Support pages. [Microsoft's release notes for Runtime 110](https://learn.microsoft.com/en-us/microsoft-edge/webview2/release-notes/sdk/1-0-1587-40)
+
 ## Build and package
 
 From PowerShell:
