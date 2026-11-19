@@ -83,7 +83,7 @@ def exercise(page: Page, fixture: RedirectFixture) -> None:
     page.get_by_role("link", name="Open application").wait_for()
     assert page.url == "webapp://app/about"
     page.wait_for_function("document.images[0]?.complete && document.images[0].naturalWidth > 0")
-    page.get_by_role("link", name="Support", exact=True).click()
+    page.locator('a[href="webapp://app/support"]').click()
     page.get_by_role("link", name="Back to application").wait_for()
     assert page.url == "webapp://app/support"
     page.get_by_role("link", name="Back to application").click()
